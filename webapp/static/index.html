@@ -5,80 +5,284 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>OmniVox — Voice AI Executive Assistant</title>
 <style>
+  :root {
+    --bg-primary: #0b0f19;
+    --bg-card: #131b2e;
+    --border: #232f48;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.25);
+    --recording-red: #ef4444;
+    --user-bubble: #1e293b;
+    --agent-bubble: #172554;
+    --user-text: #7dd3fc;
+    --agent-text: #86efac;
+  }
+
+  * { box-sizing: border-box; }
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    max-width: 680px;
-    margin: 40px auto;
-    padding: 0 16px;
-    background: #0b0e14;
-    color: #e6e6e6;
+    max-width: 760px;
+    margin: 30px auto;
+    padding: 0 20px;
+    background: var(--bg-primary);
+    color: var(--text-main);
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
   }
-  h1 { font-size: 1.5rem; margin-bottom: 6px; }
-  p.sub { color: #94a3b8; margin-top: 0; font-size: 0.95rem; }
+
+  header {
+    margin-bottom: 20px;
+  }
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
   .badge {
     display: inline-block;
     background: #1e293b;
-    color: #38bdf8;
-    padding: 2px 8px;
-    border-radius: 4px;
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--border);
+  }
+  .badge-live {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 6px 0;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  p.sub {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  #chat-container {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 320px;
+    max-height: 480px;
+    overflow-y: auto;
+    margin-bottom: 18px;
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .msg-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+    line-height: 1.5;
+    animation: fadeIn 0.2s ease;
+  }
+  .msg-row.you {
+    align-self: flex-end;
+  }
+  .msg-row.agent {
+    align-self: flex-start;
+  }
+  .msg-author {
     font-size: 0.75rem;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
+    color: var(--text-muted);
   }
-  #log {
-    border: 1px solid #262c36;
+  .msg-bubble {
+    padding: 12px 16px;
     border-radius: 10px;
-    padding: 16px;
-    min-height: 240px;
-    max-height: 400px;
-    overflow-y: auto;
-    margin-bottom: 16px;
-    background: #12161f;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
-  .msg { margin-bottom: 12px; line-height: 1.5; }
-  .you { color: #7dd3fc; }
-  .agent { color: #86efac; }
-  button {
+  .you .msg-bubble {
+    background: var(--user-bubble);
+    color: #e0f2fe;
+    border: 1px solid #334155;
+    border-bottom-right-radius: 2px;
+  }
+  .agent .msg-bubble {
+    background: var(--agent-bubble);
+    color: #f0fdf4;
+    border: 1px solid #1e3a8a;
+    border-bottom-left-radius: 2px;
+  }
+
+  /* Voice controls section */
+  .voice-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(19, 27, 46, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+  .voice-button-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #recordBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     font-size: 1rem;
+    font-weight: 600;
+    padding: 14px 28px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  #recordBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5);
+  }
+  #recordBtn.recording {
+    background: #991b1b;
+    animation: pulseRed 1.2s infinite;
+    transform: scale(0.98);
+  }
+
+  .mode-switch {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .mode-switch input { cursor: pointer; }
+
+  #status {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    min-height: 1.4em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1s infinite alternate;
+  }
+
+  /* Audio player indicator */
+  #audio-indicator {
+    display: none;
+    font-size: 0.85rem;
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  #textForm {
+    display: flex;
+    gap: 10px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+  #submitBtn {
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
     padding: 12px 22px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    margin-right: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    user-select: none;
+    transition: all 0.2s;
   }
-  #recordBtn { background: #ef4444; color: white; }
-  #recordBtn.recording { background: #991b1b; transform: scale(0.98); }
-  #textForm { display: flex; gap: 8px; margin-top: 18px; }
-  input[type="text"] {
-    flex: 1;
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid #262c36;
-    background: #12161f;
-    color: #eee;
-    font-size: 1rem;
-    outline: none;
+  #submitBtn:hover {
+    background: #1d4ed8;
   }
-  input[type="text"]:focus { border-color: #38bdf8; }
-  #submitBtn { background: #2563eb; color: white; }
-  #status { color: #94a3b8; font-size: 0.9rem; margin-top: 10px; min-height: 1.2em; }
+
+  @keyframes pulseRed {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+  @keyframes pulse {
+    0% { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.1); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
-  <div class="badge">AWS BEDROCK • NOVA 2 LITE</div>
-  <h1>🎙️ OmniVox — Voice AI Executive Assistant</h1>
-  <p class="sub">Hold the button to speak, or type your executive command below.</p>
+  <header>
+    <div class="badge-row">
+      <span class="badge">AWS BEDROCK • NOVA 2 LITE</span>
+      <span class="badge badge-live">SERVER SPEECH ENGINE ACTIVE</span>
+    </div>
+    <h1>🎙️ OmniVox — Voice AI Executive Assistant</h1>
+    <p class="sub">Speak directly via microphone (STT & TTS via server) or type below.</p>
+  </header>
 
-  <div id="log"></div>
+  <div id="chat-container"></div>
 
-  <button id="recordBtn">🎤 Hold to talk</button>
-  <div id="status"></div>
+  <div class="voice-controls">
+    <div class="voice-button-container">
+      <button id="recordBtn">🎤 Hold to Talk</button>
+      <div id="audio-indicator">🔊 Playing OmniVox Voice...</div>
+    </div>
+    <div id="status">Ready</div>
+    <label class="mode-switch">
+      <input type="checkbox" id="toggleModeCheckbox" />
+      <span>Click-to-Toggle Mode (instead of Hold-to-Talk)</span>
+    </label>
+  </div>
 
   <form id="textForm">
-    <input type="text" id="textInput" placeholder="e.g. Check my latest unread email, or research AI trends..." autocomplete="off" />
+    <input type="text" id="textInput" placeholder="e.g. Check my latest emails, or create a Notion task..." autocomplete="off" />
     <button type="submit" id="submitBtn">Send</button>
   </form>
 
@@ -86,31 +290,73 @@
 const sessionId = localStorage.getItem("session_id") || crypto.randomUUID();
 localStorage.setItem("session_id", sessionId);
 
-const log = document.getElementById("log");
+const chatContainer = document.getElementById("chat-container");
 const statusEl = document.getElementById("status");
 const recordBtn = document.getElementById("recordBtn");
+const toggleModeCheckbox = document.getElementById("toggleModeCheckbox");
+const audioIndicator = document.getElementById("audio-indicator");
 
-function addMessage(who, text) {
-  const div = document.createElement("div");
-  div.className = "msg " + who;
-  div.textContent = (who === "you" ? "You: " : "OmniVox: ") + text;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-}
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let currentAudio = null;
 
-function speakReply(text) {
-  if (window.speechSynthesis && text) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.05;
-    window.speechSynthesis.speak(utterance);
+function setStatus(text, pulsing = false) {
+  if (pulsing) {
+    statusEl.innerHTML = `<span class="status-pulse"></span> ${text}`;
+  } else {
+    statusEl.textContent = text;
   }
 }
 
-async function sendQuery(text) {
+function addMessage(who, text) {
+  const row = document.createElement("div");
+  row.className = "msg-row " + who;
+
+  const author = document.createElement("div");
+  author.className = "msg-author";
+  author.textContent = who === "you" ? "You (User)" : "OmniVox (Agent)";
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = text;
+
+  row.appendChild(author);
+  row.appendChild(bubble);
+  chatContainer.appendChild(row);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function playServerAudio(base64Data) {
+  if (!base64Data) return;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  const audioSrc = "data:audio/mp3;base64," + base64Data;
+  currentAudio = new Audio(audioSrc);
+  audioIndicator.style.display = "inline-block";
+
+  currentAudio.onended = () => {
+    audioIndicator.style.display = "none";
+  };
+  currentAudio.onerror = (e) => {
+    console.error("Audio playback error:", e);
+    audioIndicator.style.display = "none";
+  };
+
+  currentAudio.play().catch(err => {
+    console.warn("Autoplay was prevented:", err);
+    audioIndicator.style.display = "none";
+  });
+}
+
+// 1. Text Submission (/api/chat)
+async function sendTextMessage(text) {
   if (!text) return;
   addMessage("you", text);
-  statusEl.textContent = "OmniVox is thinking...";
+  setStatus("OmniVox is thinking...", true);
 
   const form = new FormData();
   form.append("message", text);
@@ -118,13 +364,16 @@ async function sendQuery(text) {
 
   try {
     const res = await fetch("/api/chat", { method: "POST", body: form });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     addMessage("agent", data.reply);
-    speakReply(data.reply);
+    if (data.audio_base64) {
+      playServerAudio(data.audio_base64);
+    }
+    setStatus("Ready");
   } catch (err) {
-    addMessage("agent", "Error: " + err);
-  } finally {
-    statusEl.textContent = "";
+    addMessage("agent", "Error: " + err.message);
+    setStatus("Request failed");
   }
 }
 
@@ -134,74 +383,148 @@ document.getElementById("textForm").addEventListener("submit", (e) => {
   const text = input.value.trim();
   if (!text) return;
   input.value = "";
-  sendQuery(text);
+  sendTextMessage(text);
 });
 
-// Web Speech Recognition for in-browser speech recognition
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition = null;
-let recognizedText = "";
-let isListening = false;
+// 2. Microphone Recording & Server STT (/api/voice)
+async function startRecording() {
+  if (isRecording) return;
+  if (currentAudio) {
+    currentAudio.pause();
+    audioIndicator.style.display = "none";
+  }
 
-if (SpeechRecognition) {
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = "en-US";
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
 
-  recognition.onstart = () => {
-    isListening = true;
-    recognizedText = "";
+    // Check supported types
+    let mimeType = "audio/webm";
+    if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+      mimeType = "audio/webm;codecs=opus";
+    } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+      mimeType = "audio/mp4";
+    } else if (MediaRecorder.isTypeSupported("audio/ogg")) {
+      mimeType = "audio/ogg";
+    }
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        audioChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop = async () => {
+      // Stop all mic tracks
+      stream.getTracks().forEach(t => t.stop());
+      const audioBlob = new Blob(audioChunks, { type: mimeType });
+      if (audioBlob.size > 0) {
+        await sendVoiceAudio(audioBlob);
+      } else {
+        setStatus("No audio detected");
+      }
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
     recordBtn.classList.add("recording");
-    statusEl.textContent = "Listening to your voice...";
-  };
+    recordBtn.textContent = "🔴 Release / Stop Recording";
+    setStatus("Listening to your voice...", true);
+  } catch (err) {
+    console.error("Microphone access error:", err);
+    setStatus("Microphone permission denied or unavailable");
+  }
+}
 
-  recognition.onresult = (event) => {
-    if (event.results && event.results[0]) {
-      recognizedText = event.results[0][0].transcript;
-      statusEl.textContent = `Heard: "${recognizedText}"`;
+function stopRecording() {
+  if (!isRecording || !mediaRecorder) return;
+  isRecording = false;
+  recordBtn.classList.remove("recording");
+  recordBtn.textContent = toggleModeCheckbox.checked ? "🎤 Click to Talk" : "🎤 Hold to Talk";
+  if (mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+  }
+}
+
+async function sendVoiceAudio(blob) {
+  setStatus("Transcribing & thinking (Server STT)...", true);
+
+  const formData = new FormData();
+  formData.append("audio", blob, "mic_input.webm");
+  formData.append("session_id", sessionId);
+
+  try {
+    const res = await fetch("/api/voice", { method: "POST", body: formData });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.transcript) {
+      addMessage("you", data.transcript);
     }
-  };
+    if (data.reply) {
+      addMessage("agent", data.reply);
+    }
+    if (data.audio_base64) {
+      playServerAudio(data.audio_base64);
+    }
+    setStatus("Ready");
+  } catch (err) {
+    console.error("Voice processing error:", err);
+    addMessage("agent", "Error processing voice clip: " + err.message);
+    setStatus("Voice processing failed");
+  }
+}
 
-  recognition.onerror = (event) => {
-    console.warn("Speech recognition error:", event.error);
-    statusEl.textContent = "Voice error: " + event.error;
-  };
+// Interaction handling: Hold-to-Talk vs Click-to-Toggle
+toggleModeCheckbox.addEventListener("change", () => {
+  if (isRecording) stopRecording();
+  recordBtn.textContent = toggleModeCheckbox.checked ? "🎤 Click to Talk" : "🎤 Hold to Talk";
+});
 
-  recognition.onend = () => {
-    isListening = false;
-    recordBtn.classList.remove("recording");
-    if (recognizedText.trim()) {
-      sendQuery(recognizedText.trim());
+recordBtn.addEventListener("mousedown", () => {
+  if (!toggleModeCheckbox.checked) {
+    startRecording();
+  }
+});
+
+recordBtn.addEventListener("mouseup", () => {
+  if (!toggleModeCheckbox.checked) {
+    stopRecording();
+  }
+});
+
+recordBtn.addEventListener("mouseleave", () => {
+  if (!toggleModeCheckbox.checked && isRecording) {
+    stopRecording();
+  }
+});
+
+recordBtn.addEventListener("touchstart", (e) => {
+  if (!toggleModeCheckbox.checked) {
+    e.preventDefault();
+    startRecording();
+  }
+});
+
+recordBtn.addEventListener("touchend", (e) => {
+  if (!toggleModeCheckbox.checked) {
+    e.preventDefault();
+    stopRecording();
+  }
+});
+
+recordBtn.addEventListener("click", () => {
+  if (toggleModeCheckbox.checked) {
+    if (isRecording) {
+      stopRecording();
     } else {
-      statusEl.textContent = "";
+      startRecording();
     }
-  };
-}
-
-function startListening() {
-  if (recognition) {
-    try {
-      recognition.start();
-    } catch (e) {
-      console.warn("Recognition already active", e);
-    }
-  } else {
-    statusEl.textContent = "Speech recognition is not supported in this browser. Please type below.";
   }
-}
-
-function stopListening() {
-  if (recognition && isListening) {
-    recognition.stop();
-  }
-}
-
-recordBtn.addEventListener("mousedown", startListening);
-recordBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startListening(); });
-recordBtn.addEventListener("mouseup", stopListening);
-recordBtn.addEventListener("mouseleave", stopListening);
-recordBtn.addEventListener("touchend", stopListening);
+});
 </script>
 </body>
 </html>
+

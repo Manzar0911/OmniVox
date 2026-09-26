@@ -98,15 +98,27 @@ async def _run_agent_turn(session_id: str, transcript: str) -> str:
 
 @app.post("/api/chat", dependencies=[Depends(_require_auth)])
 async def chat(message: str = Form(...), session_id: str = Form(...)) -> JSONResponse:
-    """Text-only turn, used by the web UI's fallback text box."""
+    """Text turn: returns text reply and synthesized speech audio."""
     reply = await _run_agent_turn(session_id, message)
-    return JSONResponse({"transcript": message, "reply": reply})
+    audio_b64 = None
+    try:
+        speech_path = synthesize_speech(reply)
+        if speech_path and os.path.exists(speech_path):
+            with open(speech_path, "rb") as f:
+                audio_b64 = base64.b64encode(f.read()).decode("ascii")
+            try:
+                os.remove(speech_path)
+            except Exception:
+                pass
+    except Exception as exc:
+        print(f"[chat] TTS failed: {exc}")
+
+    return JSONResponse({"transcript": message, "reply": reply, "audio_base64": audio_b64})
 
 
 @app.post("/api/voice", dependencies=[Depends(_require_auth)])
 async def voice(audio: UploadFile = File(...), session_id: str = Form(...)) -> JSONResponse:
-    """Voice turn: browser sends a recorded clip, we return text + spoken reply."""
-    # Keep whatever extension the browser actually sent (webm/ogg/mp4)
+    """Voice turn: browser sends a recorded clip, we return transcribed text + spoken reply."""
     suffix = Path(audio.filename or "command.webm").suffix or ".webm"
     tmp_path = str(Path(tempfile.gettempdir()) / f"{uuid.uuid4()}{suffix}")
     audio_bytes = await audio.read()
@@ -122,25 +134,39 @@ async def voice(audio: UploadFile = File(...), session_id: str = Form(...)) -> J
         transcript = transcribe_audio(tmp_path)
     except Exception as exc:
         print(f"[voice] transcription failed or not configured: {exc}")
-        return JSONResponse(
-            {
-                "transcript": "",
-                "reply": "Voice clip could not be processed on server. Use the text input or browser mic.",
-                "audio_base64": None,
-            }
-        )
+        transcript = ""
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
 
     print(f"[voice] transcript: {transcript!r}")
 
     if not transcript:
         return JSONResponse(
-            {"transcript": "", "reply": "I didn't catch that, try again.", "audio_base64": None}
+            {
+                "transcript": "",
+                "reply": "I couldn't hear or transcribe any voice input. Please check your mic and try again.",
+                "audio_base64": None,
+            }
         )
 
     reply = await _run_agent_turn(session_id, transcript)
 
-    speech_path = synthesize_speech(reply)
-    with open(speech_path, "rb") as f:
-        audio_b64 = base64.b64encode(f.read()).decode("ascii")
+    audio_b64 = None
+    try:
+        speech_path = synthesize_speech(reply)
+        if speech_path and os.path.exists(speech_path):
+            with open(speech_path, "rb") as f:
+                audio_b64 = base64.b64encode(f.read()).decode("ascii")
+            try:
+                os.remove(speech_path)
+            except Exception:
+                pass
+    except Exception as exc:
+        print(f"[voice] TTS failed: {exc}")
 
     return JSONResponse({"transcript": transcript, "reply": reply, "audio_base64": audio_b64})
+
