@@ -19,33 +19,40 @@ Whether deployed 100% locally with open-source models (**Ollama / Qwen 2.5 7B**)
 
 ---
 
-## 📸 Application Screenshots
+## 📸 Application Showcase & Screenshots
 
 ### 1. Landing & Authentication Gate
-Secure JWT-based authentication with instant account creation, password hashing via `bcrypt`, and auto-migrating database storage.
+Secure multi-user authentication supporting instant account registration and JWT login, gated with `bcrypt` password hashing and PostgreSQL storage.
 
-![OmniVox Landing & Authentication](docs/screenshots/01_auth_landing.png)
+![OmniVox Landing & Authentication](docs/screenshots/01_landing_auth.png)
 
 ---
 
 ### 2. Autonomous Voice AI & Interactive Chat Console
-Real-time spoken audio recording with instant Speech-to-Text, multi-agent reasoning, live stage logging, and Neural Text-to-Speech audio feedback.
+Real-time conversational executive console with integrated status badges for connected services, quick-action suggestion chips, audio waveform recording, and neural speech synthesis.
 
 ![OmniVox Voice & Chat Console](docs/screenshots/02_voice_chat_console.png)
 
 ---
 
-### 3. Tabbed Integrations Modal (Google OAuth 2.0 & Notion)
-Individual user settings to connect personal Google accounts via official OAuth 2.0 consent (zero password sharing) and Notion workspace secret tokens with live API validation.
+### 3. Google OAuth 2.0 Gmail Integration (Zero Password Sharing)
+Official Google OAuth 2.0 consent flow allowing users to securely link their personal Gmail inbox with single-click authentication.
 
-![OmniVox Integrations Modal](docs/screenshots/03_integrations_modal.png)
+![OmniVox Google OAuth Gmail Integration](docs/screenshots/03_gmail_oauth_modal.png)
 
 ---
 
-### 4. Full-Stack LangSmith Observability & Agent Traces
-End-to-end hierarchical trace visualization mapping user turns, orchestrator routing decisions, specialist sub-agents, tool executions, and latency/token usage.
+### 4. Notion Workspace Integration (Live API Validation)
+Connect Notion workspaces securely via internal integration secrets, with real-time `/v1/users/me` token verification before saving.
 
-![OmniVox LangSmith Observability](docs/screenshots/05_langsmith_tracing_runs.png)
+![OmniVox Notion Integration Modal](docs/screenshots/04_notion_integration_modal.png)
+
+---
+
+### 5. LangSmith Observability & Multi-Agent Tracing
+Hierarchical execution traces mapping user turns, orchestrator routing decisions, specialist sub-agents, tool executions, and latency/token usage.
+
+![OmniVox LangSmith Tracing](docs/screenshots/05_langsmith_tracing.png)
 
 ---
 
