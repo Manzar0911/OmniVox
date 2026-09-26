@@ -1,36 +1,32 @@
-"""A web-research tool the agent can call before writing a Notion page."""
+"""Research tool powered directly by Qwen 2.5 7B for OmniVox."""
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
-from langchain_tavily import TavilySearch
 
 from .. import config
 from ..logging_utils import log_stage
 
-_llm = ChatOpenAI(model=config.CHAT_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.3)
-_search = TavilySearch(tavily_api_key=config.TAVILY_API_KEY, max_results=5)
-
 
 @tool
 def research_topic(topic: str) -> str:
-    """Research a topic on the web and return a concise markdown summary.
+    """Research, analyze, and synthesize in-depth knowledge on a topic using Qwen 2.5.
 
-    Use this before creating a Notion page whenever the user asks you to
-    "research", "look into", or "find out about" something. The summary
-    should then be passed as the content when creating the Notion page.
+    Use this before creating a Notion page or answering executive questions whenever
+    the user asks to research, explain, structure, or investigate a topic.
     """
-    log_stage("researcher -> Tavily", input=topic)
-    raw_results = _search.invoke({"query": topic})
-    results_text = "\n".join(
-        f"- {r['title']}: {r['content']}" for r in raw_results.get("results", [])
-    )
-    log_stage("Tavily -> researcher", output=results_text)
+    log_stage("researcher -> Qwen 2.5", input=topic)
 
     prompt = (
-        "You are a research assistant. Using the raw search results below, "
-        "write a concise, well-organized summary about the topic. Use short "
-        "headings and bullet points. Keep it under 300 words.\n\n"
-        f"Topic: {topic}\n\nRaw search results:\n{results_text}"
+        "You are an expert research specialist. Conduct a comprehensive, highly accurate, "
+        "and well-structured investigation on the following topic.\n\n"
+        f"Topic: {topic}\n\n"
+        "Instructions:\n"
+        "- Provide clear structured markdown with executive summary, key findings, pros/cons (if applicable), and key takeaways.\n"
+        "- Use concise bullet points and clear headings.\n"
+        "- Keep the response sharp, factual, and under 350 words.\n"
+        "- Return only the markdown content ready to be saved into Notion or read aloud."
     )
-    response = _llm.invoke(prompt)
-    log_stage("summarize LLM -> researcher", output=response.content)
-    return response.content
+
+    llm = config.get_chat_model(temperature=0.3)
+    response = llm.invoke(prompt)
+    output = response.content if hasattr(response, "content") else str(response)
+    log_stage("Qwen 2.5 -> researcher", output=output)
+    return output

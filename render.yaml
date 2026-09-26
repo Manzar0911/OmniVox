@@ -18,8 +18,14 @@ services:
     env: docker
     plan: free
     envVars:
-      - key: OPENAI_API_KEY
+      - key: AWS_ACCESS_KEY_ID
         sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: ap-south-1
+      - key: BEDROCK_MODEL_ID
+        value: global.amazon.nova-2-lite-v1:0
       - key: TAVILY_API_KEY
         sync: false
       - key: AUTH_USERNAME
@@ -38,11 +44,3 @@ services:
         sync: false
       - key: LANGSMITH_PROJECT
         value: omnivox
-      - key: CHAT_MODEL
-        value: gpt-4o-mini
-      - key: STT_MODEL
-        value: whisper-1
-      - key: TTS_MODEL
-        value: tts-1
-      - key: TTS_VOICE
-        value: alloy

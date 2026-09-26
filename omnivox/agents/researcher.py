@@ -18,4 +18,4 @@ Return only the summary itself, ready to be handed to another assistant
 
 async def build_researcher():
     """Assemble the research specialist agent."""
-    return create_agent(config.CHAT_MODEL, tools=[research_topic], system_prompt=SYSTEM_PROMPT)
+    return create_agent(config.get_chat_model(), tools=[research_topic], system_prompt=SYSTEM_PROMPT)

@@ -40,18 +40,23 @@ works out of the box in the container; for local dev, run the two
 `npm install -g` commands above once. See README.md for the
 full walkthrough.
 """
+import shutil
+
 from langchain_mcp_adapters.client import MultiServerMCPClient
+
+_gmail_cmd = shutil.which("gmail-mcp") or "gmail-mcp"
+_notion_cmd = shutil.which("mcp-remote") or "mcp-remote"
 
 mcp_client = MultiServerMCPClient(
     {
         "gmail": {
             "transport": "stdio",
-            "command": "gmail-mcp",
+            "command": _gmail_cmd,
             "args": [],
         },
         "notion": {
             "transport": "stdio",
-            "command": "mcp-remote",
+            "command": _notion_cmd,
             "args": ["https://mcp.notion.com/mcp"],
         },
     }

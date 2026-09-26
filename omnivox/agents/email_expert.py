@@ -23,4 +23,4 @@ dump of raw tool output.
 async def build_email_expert():
     """Discover the Gmail MCP tools and assemble the specialist agent."""
     gmail_tools = await mcp_client.get_tools(server_name="gmail")
-    return create_agent(config.CHAT_MODEL, tools=gmail_tools, system_prompt=SYSTEM_PROMPT)
+    return create_agent(config.get_chat_model(), tools=gmail_tools, system_prompt=SYSTEM_PROMPT)

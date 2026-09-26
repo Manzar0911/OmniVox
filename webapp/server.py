@@ -1,22 +1,18 @@
-"""OmniVox web app: browser mic -> STT -> agent -> Gmail/Notion (MCP) -> TTS -> browser audio.
+"""OmniVox FastAPI Server: browser mic -> STT -> multi-agent orchestrator -> MCP tools -> TTS -> browser audio.
 
-This exposes the voice agent through a browser interface with both audio
-and text input.
+This serves the OmniVox web interface and REST/voice endpoints.
+It enables OmniVox to be operated via speech from any browser or deployed as a cloud service.
 
-State is kept in a plain in-memory dict keyed by a client-generated session
-id. That's fine for a single-instance demo deployment; it is not meant to
-survive restarts or scale beyond one process.
+State is kept in an in-memory session store keyed by a client session ID.
 
-SECURITY NOTE: the agent now has real Gmail (read/send) and Notion access
-via MCP. If AUTH_PASSWORD is set, every route (including the page itself)
-requires HTTP Basic Auth - the browser's native login prompt, checked
-against AUTH_USERNAME/AUTH_PASSWORD. Set this before exposing the service
-on a public URL, otherwise anyone with the link can read or send from your
-real Gmail account.
+SECURITY NOTE: OmniVox connects to real Gmail (read/send) and Notion workspaces
+via Model Context Protocol (MCP). If AUTH_PASSWORD is set, all routes (including the web UI)
+require HTTP Basic Auth.
 """
 import base64
 import os
 import secrets
+import tempfile
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -26,7 +22,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from langchain.messages import HumanMessage
-from openai import BadRequestError
 
 from omnivox import config
 from omnivox.agent import build_agent
@@ -73,7 +68,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="OmniVox", lifespan=lifespan)
+app = FastAPI(title="OmniVox — Voice AI Executive Assistant", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -111,13 +106,9 @@ async def chat(message: str = Form(...), session_id: str = Form(...)) -> JSONRes
 @app.post("/api/voice", dependencies=[Depends(_require_auth)])
 async def voice(audio: UploadFile = File(...), session_id: str = Form(...)) -> JSONResponse:
     """Voice turn: browser sends a recorded clip, we return text + spoken reply."""
-    # Keep whatever extension the browser actually sent (webm/ogg/mp4) -
-    # Whisper uses it as a hint for which container/codec to decode, so
-    # saving everything as .webm regardless of the real format is what
-    # causes "could not be decoded" errors on browsers that don't record
-    # webm/opus.
+    # Keep whatever extension the browser actually sent (webm/ogg/mp4)
     suffix = Path(audio.filename or "command.webm").suffix or ".webm"
-    tmp_path = f"/tmp/{uuid.uuid4()}{suffix}"
+    tmp_path = str(Path(tempfile.gettempdir()) / f"{uuid.uuid4()}{suffix}")
     audio_bytes = await audio.read()
     with open(tmp_path, "wb") as f:
         f.write(audio_bytes)
@@ -129,12 +120,12 @@ async def voice(audio: UploadFile = File(...), session_id: str = Form(...)) -> J
 
     try:
         transcript = transcribe_audio(tmp_path)
-    except BadRequestError as exc:
-        print(f"[voice] transcription failed: {exc}")
+    except Exception as exc:
+        print(f"[voice] transcription failed or not configured: {exc}")
         return JSONResponse(
             {
                 "transcript": "",
-                "reply": "That clip was too short or couldn't be understood - press and hold while you speak.",
+                "reply": "Voice clip could not be processed on server. Use the text input or browser mic.",
                 "audio_base64": None,
             }
         )

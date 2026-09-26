@@ -23,7 +23,7 @@ from .agents.notion_expert import build_notion_expert
 from .agents.researcher import build_researcher
 from .logging_utils import log_stage
 
-ORCHESTRATOR_SYSTEM_PROMPT = """You are Aria, a voice-controlled executive assistant.
+ORCHESTRATOR_SYSTEM_PROMPT = """You are OmniVox, a voice-controlled executive assistant.
 
 Answer general questions directly yourself. For anything that needs real
 access to the user's Notion workspace, Gmail inbox, or current web
@@ -113,4 +113,4 @@ async def build_agent():
         return output
 
     tools = [notion_expert, email_expert, researcher]
-    return create_agent(config.CHAT_MODEL, tools=tools, system_prompt=ORCHESTRATOR_SYSTEM_PROMPT)
+    return create_agent(config.get_chat_model(), tools=tools, system_prompt=ORCHESTRATOR_SYSTEM_PROMPT)

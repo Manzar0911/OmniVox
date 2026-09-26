@@ -19,4 +19,4 @@ for a link.
 async def build_notion_expert():
     """Discover the Notion MCP tools and assemble the specialist agent."""
     notion_tools = await mcp_client.get_tools(server_name="notion")
-    return create_agent(config.CHAT_MODEL, tools=notion_tools, system_prompt=SYSTEM_PROMPT)
+    return create_agent(config.get_chat_model(), tools=notion_tools, system_prompt=SYSTEM_PROMPT)
