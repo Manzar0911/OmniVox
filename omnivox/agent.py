@@ -73,11 +73,10 @@ async def _try_build(build_fn, name: str):
 
 async def build_agent():
     """Build the three specialists, wrap them as tools, and assemble the Orchestrator."""
-    notion_agent, email_agent, research_agent = await asyncio.gather(
-        _try_build(build_notion_expert, "notion_expert"),
-        _try_build(build_email_expert, "email_expert"),
-        _try_build(build_researcher, "researcher"),
-    )
+    notion_agent = await _try_build(build_notion_expert, "notion_expert")
+    email_agent = await _try_build(build_email_expert, "email_expert")
+    research_agent = await _try_build(build_researcher, "researcher")
+
 
     @tool
     async def notion_expert(request: str) -> str:
