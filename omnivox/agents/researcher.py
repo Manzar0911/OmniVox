@@ -7,13 +7,20 @@ from ..tools.research_tool import research_topic
 SYSTEM_PROMPT = """You are the research specialist on a team of AI assistants.
 
 Given a topic, use your web search tool to investigate it and produce a
-concise, well-organized markdown summary: short headings, bullet points,
-under 300 words. Search more than once if the first results are thin or
-off-topic.
+concise, structured summary under 200 words. Search more than once if the first results are thin.
 
-Return only the summary itself, ready to be handed to another assistant
-(e.g. to be saved as a Notion page) - no preamble like "Here is a summary".
+STRUCTURED OUTPUT RULES:
+- Never use markdown asterisks (do NOT use **bold** or *italic* asterisks).
+- Return cleanly structured responses following this schema:
+
+Topic: [Topic Name]
+Key Findings:
+- [Key point 1]
+- [Key point 2]
+- [Key point 3]
+Conclusion: [1 concise sentence summarizing the main insight]
 """
+
 
 
 async def build_researcher():

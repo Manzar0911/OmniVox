@@ -19,10 +19,11 @@ def research_topic(topic: str) -> str:
         "and well-structured investigation on the following topic.\n\n"
         f"Topic: {topic}\n\n"
         "Instructions:\n"
-        "- Provide clear structured markdown with executive summary, key findings, pros/cons (if applicable), and key takeaways.\n"
-        "- Use concise bullet points and clear headings.\n"
-        "- Keep the response sharp, factual, and under 350 words.\n"
-        "- Return only the markdown content ready to be saved into Notion or read aloud."
+        "- Format the output cleanly with clear sections: Topic, Key Findings, and Conclusion.\n"
+        "- Do NOT use markdown asterisks (no **bold** or *italic* asterisks).\n"
+        "- Use concise bullet points (- item).\n"
+        "- Keep the response sharp, factual, and under 250 words.\n"
+        "- Return only the structured content ready to be read aloud or saved into Notion."
     )
 
     llm = config.get_chat_model(temperature=0.3)
@@ -30,3 +31,4 @@ def research_topic(topic: str) -> str:
     output = response.content if hasattr(response, "content") else str(response)
     log_stage("Qwen 2.5 -> researcher", output=output)
     return output
+

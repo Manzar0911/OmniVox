@@ -10,10 +10,21 @@ You have direct tool access to the user's Notion workspace: searching,
 reading, and creating pages. Handle whatever Notion request you're given
 using those tools.
 
-Reply with a short, natural confirmation of what you found or did - not a
-dump of raw tool output or a page URL, unless the caller specifically asks
-for a link.
+STRUCTURED OUTPUT RULES:
+- Never use markdown asterisks (do NOT use **bold** or *italic* asterisks).
+- Return cleanly structured responses following these standard schemas:
+
+For Page / Item Creation:
+Status: Page Created Successfully
+Title: [Page Title]
+Summary: [1-2 sentences on what was documented or amended]
+
+For Search / Read Pages:
+Status: [Found X Pages / Page Content Retrieved]
+Title: [Page Title]
+Details: [Clean summary of the page contents]
 """
+
 
 
 async def build_notion_expert():
