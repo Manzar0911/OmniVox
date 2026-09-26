@@ -12,9 +12,10 @@ their system prompts focused on one job instead of one long prompt trying
 to cover Gmail, Notion, and research at once.
 """
 import asyncio
-
+from typing import Optional
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 
 from . import config
@@ -54,18 +55,7 @@ _SPECIALIST_BUILD_TIMEOUT = 20.0
 
 
 async def _try_build(build_fn, name: str):
-    """Build a specialist, but never let its failure - or hang - take down the others.
-
-    A specialist can fail to start for reasons outside our code - an
-    expired/missing MCP auth token, a misconfigured OAuth app, npx unable
-    to reach the network. Without the try/except, asyncio.gather would
-    propagate the first exception and cancel every sibling task, so one bad
-    token would crash the Orchestrator (and both other specialists)
-    entirely. The timeout matters separately: mcp-remote with no cached
-    Notion token doesn't raise, it opens an interactive OAuth URL and waits
-    forever for a browser that will never visit it on a headless server -
-    an exception handler alone would never fire.
-    """
+    """Build a specialist, but never let its failure - or hang - take down the others."""
     try:
         return await asyncio.wait_for(build_fn(), timeout=_SPECIALIST_BUILD_TIMEOUT)
     except TimeoutError:
@@ -74,7 +64,7 @@ async def _try_build(build_fn, name: str):
             "(likely stuck waiting on an interactive auth flow) - it will report itself unavailable"
         )
         return None
-    except Exception as exc:  # noqa: BLE001 - any other startup failure is handled the same way
+    except Exception as exc:  # noqa: BLE001
         print(f"[agent] {name} failed to initialize, it will report itself unavailable: {exc}")
         return None
 
@@ -87,37 +77,38 @@ async def build_agent():
 
 
     @tool
-    async def notion_expert(request: str) -> str:
+    async def notion_expert(request: str, config: Optional[RunnableConfig] = None) -> str:
         """Delegate a Notion request (search, read, or create pages) to the Notion specialist."""
         if notion_agent is None:
             return "The Notion integration isn't available on this server right now."
         log_stage("Orchestrator -> notion_expert", input=request)
-        result = await notion_agent.ainvoke({"messages": [HumanMessage(content=request)]})
+        result = await notion_agent.ainvoke({"messages": [HumanMessage(content=request)]}, config=config)
         output = result["messages"][-1].content
         log_stage("notion_expert -> Orchestrator", output=output)
         return output
 
     @tool
-    async def email_expert(request: str) -> str:
+    async def email_expert(request: str, config: Optional[RunnableConfig] = None) -> str:
         """Delegate a Gmail request (check, search, draft, or send email) to the email specialist."""
         if email_agent is None:
             return "The Gmail integration isn't available on this server right now."
         log_stage("Orchestrator -> email_expert", input=request)
-        result = await email_agent.ainvoke({"messages": [HumanMessage(content=request)]})
+        result = await email_agent.ainvoke({"messages": [HumanMessage(content=request)]}, config=config)
         output = result["messages"][-1].content
         log_stage("email_expert -> Orchestrator", output=output)
         return output
 
     @tool
-    async def researcher(topic: str) -> str:
+    async def researcher(topic: str, config: Optional[RunnableConfig] = None) -> str:
         """Delegate a web research request to the research specialist; returns a markdown summary."""
         if research_agent is None:
             return "The research tool isn't available on this server right now."
         log_stage("Orchestrator -> researcher", input=topic)
-        result = await research_agent.ainvoke({"messages": [HumanMessage(content=topic)]})
+        result = await research_agent.ainvoke({"messages": [HumanMessage(content=topic)]}, config=config)
         output = result["messages"][-1].content
         log_stage("researcher -> Orchestrator", output=output)
         return output
 
     tools = [notion_expert, email_expert, researcher]
     return create_agent(config.get_chat_model(), tools=tools, system_prompt=ORCHESTRATOR_SYSTEM_PROMPT)
+

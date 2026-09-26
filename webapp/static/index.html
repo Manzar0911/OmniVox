@@ -3,112 +3,387 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>OmniVox — Voice AI Executive Assistant</title>
+<title>OmniVox — Autonomous Voice AI Executive Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-primary: #0b0f19;
+    --bg-base: #070a12;
+    --bg-surface: #0e1424;
     --bg-card: #131b2e;
-    --border: #232f48;
-    --text-main: #f1f5f9;
+    --bg-card-sub: #172235;
+    --border: #1e2c47;
+    --border-focus: #38bdf8;
+    --text-main: #f8fafc;
     --text-muted: #94a3b8;
+    --text-dim: #64748b;
     --accent: #38bdf8;
-    --accent-glow: rgba(56, 189, 248, 0.25);
+    --accent-glow: rgba(56, 189, 248, 0.2);
     --recording-red: #ef4444;
+    --success: #10b981;
+    --success-glow: rgba(16, 185, 129, 0.2);
+    --warning: #f59e0b;
     --user-bubble: #1e293b;
-    --agent-bubble: #172554;
-    --user-text: #7dd3fc;
-    --agent-text: #86efac;
+    --agent-bubble: #0c233c;
   }
 
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    max-width: 760px;
-    margin: 30px auto;
-    padding: 0 20px;
-    background: var(--bg-primary);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #111e38 0%, var(--bg-base) 75%);
     color: var(--text-main);
-    min-height: 90vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
   }
 
-  header {
-    margin-bottom: 20px;
-  }
-  .badge-row {
+  /* 1. AUTH / LANDING VIEW */
+  #authView {
+    flex: 1;
     display: flex;
-    gap: 8px;
+    flex-direction: column;
     align-items: center;
-    margin-bottom: 8px;
+    justify-content: center;
+    padding: 40px 20px;
+    max-width: 1080px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeIn 0.4s ease;
   }
-  .badge {
-    display: inline-block;
-    background: #1e293b;
+
+  .landing-hero {
+    text-align: center;
+    margin-bottom: 36px;
+    max-width: 680px;
+  }
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.25);
     color: var(--accent);
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: 0.75rem;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.82rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+  }
+  .landing-hero h1 {
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #ffffff 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .landing-hero p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  .landing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    width: 100%;
+    max-width: 960px;
+    align-items: stretch;
+  }
+  @media (max-width: 820px) {
+    .landing-grid { grid-template-columns: 1fr; }
+    .landing-hero h1 { font-size: 2.1rem; }
+  }
+
+  .features-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: center;
+  }
+  .feat-card {
+    background: rgba(19, 27, 46, 0.6);
     border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: transform 0.2s, border-color 0.2s;
   }
-  .badge-live {
-    color: #4ade80;
-    border-color: rgba(74, 222, 128, 0.3);
+  .feat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
   }
-  h1 {
+  .feat-icon {
     font-size: 1.6rem;
-    margin: 0 0 6px 0;
+    background: var(--bg-card-sub);
+    padding: 10px;
+    border-radius: 12px;
+    line-height: 1;
+  }
+  .feat-title {
     font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: var(--text-main);
+  }
+  .feat-desc {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .auth-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .auth-tabs {
+    display: flex;
+    background: var(--bg-base);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    gap: 4px;
+  }
+  .auth-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .auth-tab.active {
+    background: var(--accent);
+    color: #070a12;
+    font-weight: 700;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+  }
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .alert-banner {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: none;
+    line-height: 1.4;
+  }
+  .alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+  }
+  .alert-success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+  }
+
+  /* 2. APP / CONSOLE VIEW */
+  #appView {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    max-width: 880px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 16px 20px 30px 20px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(12px);
+  }
+  .nav-brand {
+    font-size: 1.25rem;
+    font-weight: 800;
     display: flex;
     align-items: center;
     gap: 10px;
+    color: var(--text-main);
   }
-  p.sub {
-    color: var(--text-muted);
-    margin: 0;
-    font-size: 0.95rem;
+  .nav-brand span {
+    background: linear-gradient(135deg, #ffffff, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .nav-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .nav-btn.primary {
+    background: var(--accent);
+    color: #070a12;
+    border: none;
+    font-weight: 700;
+  }
+  .nav-btn.primary:hover {
+    background: #0284c7;
+    color: white;
   }
 
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .status-pill.connected {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+  .status-pill.disconnected {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+    border-color: var(--border);
+  }
+  .status-pill:hover { filter: brightness(1.2); }
+
+  /* Chat Container */
   #chat-container {
     flex: 1;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
-    min-height: 320px;
-    max-height: 480px;
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 380px;
+    max-height: 500px;
     overflow-y: auto;
-    margin-bottom: 18px;
-    background: var(--bg-card);
+    margin-bottom: 14px;
+    background: var(--bg-surface);
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+    gap: 16px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
   }
 
   .msg-row {
     display: flex;
     flex-direction: column;
-    max-width: 85%;
-    line-height: 1.5;
-    animation: fadeIn 0.2s ease;
+    max-width: 88%;
+    line-height: 1.55;
+    animation: fadeIn 0.25s ease;
   }
-  .msg-row.you {
-    align-self: flex-end;
-  }
-  .msg-row.agent {
-    align-self: flex-start;
-  }
+  .msg-row.you { align-self: flex-end; }
+  .msg-row.agent { align-self: flex-start; }
   .msg-author {
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 4px;
     color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .msg-bubble {
-    padding: 12px 16px;
-    border-radius: 10px;
+    padding: 14px 18px;
+    border-radius: 14px;
     font-size: 0.95rem;
     white-space: pre-wrap;
     word-break: break-word;
@@ -121,49 +396,73 @@
   }
   .agent .msg-bubble {
     background: var(--agent-bubble);
-    color: #f0fdf4;
+    color: #f8fafc;
     border: 1px solid #1e3a8a;
     border-bottom-left-radius: 2px;
   }
 
-  /* Voice controls section */
+  .quick-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-card-hover);
+  }
+
+  /* Voice Controls */
   .voice-controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding: 16px;
-    background: rgba(19, 27, 46, 0.6);
+    background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 14px;
+    border-radius: 16px;
+    margin-bottom: 12px;
   }
   .voice-button-container {
     display: flex;
     align-items: center;
     gap: 16px;
   }
-
   #recordBtn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 14px 28px;
+    gap: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 14px 32px;
     border-radius: 30px;
     border: none;
     cursor: pointer;
     background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.45);
     transition: all 0.2s ease;
     user-select: none;
   }
   #recordBtn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.55);
   }
   #recordBtn.recording {
     background: #991b1b;
@@ -188,6 +487,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 500;
   }
   .status-pulse {
     display: inline-block;
@@ -198,53 +498,115 @@
     animation: pulse 1s infinite alternate;
   }
 
-  /* Audio player indicator */
   #audio-indicator {
     display: none;
     font-size: 0.85rem;
-    color: #86efac;
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    padding: 4px 12px;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 6px 14px;
     border-radius: 20px;
+    font-weight: 600;
   }
 
-  #textForm {
-    display: flex;
-    gap: 10px;
-  }
-  input[type="text"] {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--text-main);
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input[type="text"]:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-glow);
-  }
+  #textForm { display: flex; gap: 10px; }
+  #textInput { flex: 1; font-size: 0.95rem; }
   #submitBtn {
-    background: #2563eb;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
     color: white;
-    font-weight: 600;
-    padding: 12px 22px;
-    border-radius: 8px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
     transition: all 0.2s;
   }
   #submitBtn:hover {
-    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
   }
+
+  /* 3. INTEGRATIONS MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .modal-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 580px;
+    padding: 26px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.6rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--text-main); }
+
+  .integration-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .integration-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .integration-panel-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .integration-hint {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+  .integration-hint a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .integration-hint a:hover { text-decoration: underline; }
 
   @keyframes pulseRed {
     0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+    70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
     100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
   }
   @keyframes pulse {
@@ -252,44 +614,193 @@
     100% { opacity: 1; transform: scale(1.1); }
   }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
 </style>
 </head>
 <body>
-  <header>
-    <div class="badge-row">
-      <span class="badge">AWS BEDROCK • NOVA 2 LITE</span>
-      <span class="badge badge-live">SERVER SPEECH ENGINE ACTIVE</span>
-    </div>
-    <h1>🎙️ OmniVox — Voice AI Executive Assistant</h1>
-    <p class="sub">Speak directly via microphone (STT & TTS via server) or type below.</p>
-  </header>
 
-  <div id="chat-container"></div>
-
-  <div class="voice-controls">
-    <div class="voice-button-container">
-      <button id="recordBtn">🎤 Hold to Talk</button>
-      <div id="audio-indicator">🔊 Playing OmniVox Voice...</div>
+  <!-- 1. LANDING & AUTH GATEWAY (SHOWN ONLY WHEN LOGGED OUT) -->
+  <div id="authView">
+    <div class="landing-hero">
+      <div class="hero-pill">🎙️ ZERO-COST AI EXECUTIVE ASSISTANT</div>
+      <h1>OmniVox Voice Executive</h1>
+      <p>Operate your personal Gmail inbox, Notion workspaces, and real-time web research using autonomous speech and multi-agent intelligence.</p>
     </div>
-    <div id="status">Ready</div>
-    <label class="mode-switch">
-      <input type="checkbox" id="toggleModeCheckbox" />
-      <span>Click-to-Toggle Mode (instead of Hold-to-Talk)</span>
-    </label>
+
+    <div class="landing-grid">
+      <div class="features-panel">
+        <div class="feat-card">
+          <div class="feat-icon">🧠</div>
+          <div>
+            <div class="feat-title">Multi-Agent Specialist Brain</div>
+            <div class="feat-desc">Autonomous orchestrator delegating dynamically to email, Notion, and research experts.</div>
+          </div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">⚡</div>
+          <div>
+            <div class="feat-title">Per-User Verified Integrations</div>
+            <div class="feat-desc">Securely link your personal Gmail and Notion workspace with live credential validation.</div>
+          </div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🗣️</div>
+          <div>
+            <div class="feat-title">Instant Neural Speech Engine</div>
+            <div class="feat-desc">Ultra-responsive Speech-to-Text with human-like Neural voice synthesis.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</button>
+          <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
+        </div>
+
+        <div id="authAlert" class="alert-banner"></div>
+
+        <form id="authForm" onsubmit="handleAuthSubmit(event)">
+          <div class="form-group" id="fullNameGroup" style="display: none;">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="authFullName" placeholder="e.g. Alex Morgan" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="authEmail" placeholder="you@company.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="authPassword" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-submit" id="authSubmitBtn">
+            <span>Sign In to Executive Console</span>
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 
-  <form id="textForm">
-    <input type="text" id="textInput" placeholder="e.g. Check my latest emails, or create a Notion task..." autocomplete="off" />
-    <button type="submit" id="submitBtn">Send</button>
-  </form>
+  <!-- 2. EXECUTIVE CONSOLE (SHOWN ONLY WHEN AUTHENTICATED) -->
+  <div id="appView">
+    <div class="nav-bar">
+      <div class="nav-brand">
+        🎙️ <span>OmniVox</span>
+      </div>
+      <div class="nav-pills">
+        <span class="status-pill disconnected" id="navGmailPill" onclick="openIntegrationsModal('gmail')">📧 Gmail: Off</span>
+        <span class="status-pill disconnected" id="navNotionPill" onclick="openIntegrationsModal('notion')">📝 Notion: Off</span>
+        <button class="nav-btn primary" onclick="openIntegrationsModal('gmail')">⚡ Integrations</button>
+        <span class="nav-btn" id="userBadge" style="cursor: default;">👤 User</span>
+        <button class="nav-btn" onclick="handleLogout()" title="Sign Out">🚪</button>
+      </div>
+    </div>
+
+    <div id="chat-container"></div>
+
+    <div class="quick-chips">
+      <div class="chip" onclick="sendQuickPrompt('Check my latest unread emails')">📧 Check my latest emails</div>
+      <div class="chip" onclick="sendQuickPrompt('Search Notion for my meeting notes')">📝 Search Notion notes</div>
+      <div class="chip" onclick="sendQuickPrompt('Research latest AI advancements and draft an executive summary')">🔍 Research AI Trends</div>
+    </div>
+
+    <div class="voice-controls">
+      <div class="voice-button-container">
+        <button id="recordBtn">🎤 Hold to Talk</button>
+        <div id="audio-indicator">🔊 OmniVox Speaking...</div>
+      </div>
+      <div id="status">Ready</div>
+      <label class="mode-switch">
+        <input type="checkbox" id="toggleModeCheckbox" />
+        <span>Click-to-Toggle Mode (hands-free start/stop)</span>
+      </label>
+    </div>
+
+    <form id="textForm">
+      <input type="text" id="textInput" placeholder="Type a command or speak above (e.g. Draft an email to team about Friday sprint)..." autocomplete="off" />
+      <button type="submit" id="submitBtn">Send</button>
+    </form>
+  </div>
+
+  <!-- 3. TABBED INTEGRATIONS MODAL -->
+  <div class="modal-overlay" id="integrationsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚡ Workspace Integrations</div>
+        <button class="modal-close" onclick="closeIntegrationsModal()">&times;</button>
+      </div>
+
+      <!-- Tab Buttons for Gmail vs Notion -->
+      <div class="auth-tabs" style="margin-bottom: 0;">
+        <button class="auth-tab active" id="tabIntegGmail" onclick="switchIntegTab('gmail')">
+          📧 Google / Gmail
+        </button>
+        <button class="auth-tab" id="tabIntegNotion" onclick="switchIntegTab('notion')">
+          📝 Notion Workspace
+        </button>
+      </div>
+
+      <div id="integAlert" class="alert-banner"></div>
+
+      <!-- Gmail Tab Panel (100% Google OAuth 2.0) -->
+      <div id="integGmailPanel" class="integration-panel">
+        <div class="integration-panel-header">
+          <div class="integration-panel-title">📧 Google / Gmail Account</div>
+          <span class="status-pill disconnected" id="modalGmailPill">Not Connected</span>
+        </div>
+
+        <div style="background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 14px; padding: 22px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center;">
+          <div style="font-weight: 700; font-size: 1.05rem; color: #f8fafc;">Official Google OAuth 2.0 Authentication</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 440px; line-height: 1.5;">
+            Connect your Gmail account securely through Google's official consent screen. OmniVox never requests, sees, or stores your Google password.
+          </div>
+          <button class="btn-submit" style="width: auto; background: #ffffff; color: #1f2937; padding: 12px 28px; font-size: 0.95rem; font-weight: 700; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); border-radius: 10px;" onclick="startGoogleOAuth()">
+            <svg width="20" height="20" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+            <span>Sign in with Google</span>
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px;">
+          <button class="nav-btn" id="gmailDiscBtn" style="display: none; color: #ef4444;" onclick="disconnectService('gmail')">Disconnect Gmail Account</button>
+        </div>
+      </div>
+
+      <!-- Notion Tab Panel -->
+      <div id="integNotionPanel" class="integration-panel" style="display: none;">
+        <div class="integration-panel-header">
+          <div class="integration-panel-title">📝 Connect Notion Workspace</div>
+          <span class="status-pill disconnected" id="modalNotionPill">Not Connected</span>
+        </div>
+        <div class="integration-hint">
+          Requires Notion Secret: Visit <b><a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a></b>, create an integration, copy the <code>Internal Integration Secret</code>, and invite the bot to your pages.
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label">Workspace Label (Optional)</label>
+          <input type="text" id="notionWorkspaceInput" placeholder="e.g. Personal Workspace" />
+        </div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label">Internal Integration Secret Token (ntn_... or secret_...)</label>
+          <input type="password" id="notionTokenInput" placeholder="ntn_... or secret_..." />
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="nav-btn" id="notionDiscBtn" style="display: none; color: #ef4444;" onclick="disconnectService('notion')">Disconnect</button>
+          <button class="btn-submit" style="width: auto; padding: 10px 22px; font-size: 0.9rem;" id="notionSaveBtn" onclick="saveNotionIntegration()">Verify &amp; Connect Notion</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 const sessionId = localStorage.getItem("session_id") || crypto.randomUUID();
 localStorage.setItem("session_id", sessionId);
 
+let authToken = localStorage.getItem("omnivox_token") || "";
+let currentUser = null;
+
+const authView = document.getElementById("authView");
+const appView = document.getElementById("appView");
 const chatContainer = document.getElementById("chat-container");
 const statusEl = document.getElementById("status");
 const recordBtn = document.getElementById("recordBtn");
@@ -301,29 +812,273 @@ let audioChunks = [];
 let isRecording = false;
 let currentAudio = null;
 
-function setStatus(text, pulsing = false) {
-  if (pulsing) {
-    statusEl.innerHTML = `<span class="status-pulse"></span> ${text}`;
-  } else {
-    statusEl.textContent = text;
+function getAuthHeaders() {
+  const headers = {};
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+  return headers;
+}
+
+async function initSession() {
+  if (!authToken) {
+    showLoggedOutView();
+    return;
+  }
+  try {
+    const res = await fetch("/api/auth/me", { headers: getAuthHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      currentUser = data.user;
+      showLoggedInView();
+      await loadIntegrations();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("connected") === "gmail") {
+        openIntegrationsModal("gmail");
+        showAlert("integAlert", "🎉 Google Gmail connected & verified successfully via Google OAuth!", false);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } else {
+      handleLogout();
+    }
+  } catch (err) {
+    showLoggedOutView();
   }
 }
 
+function showLoggedInView() {
+  authView.style.display = "none";
+  appView.style.display = "flex";
+  document.getElementById("userBadge").textContent = `👤 ${currentUser.full_name || currentUser.email}`;
+  if (chatContainer.children.length === 0) {
+    addMessage("agent", `Hello ${currentUser.full_name || 'there'}! I'm OmniVox, your executive voice assistant. How can I help you today?`);
+  }
+}
+
+function showLoggedOutView() {
+  authView.style.display = "flex";
+  appView.style.display = "none";
+}
+
+function handleLogout() {
+  authToken = "";
+  currentUser = null;
+  localStorage.removeItem("omnivox_token");
+  showLoggedOutView();
+}
+
+// Auth Tabs
+let currentAuthTab = "login";
+function switchAuthTab(tab) {
+  currentAuthTab = tab;
+  const isLogin = tab === "login";
+  document.getElementById("tabLogin").classList.toggle("active", isLogin);
+  document.getElementById("tabRegister").classList.toggle("active", !isLogin);
+  document.getElementById("fullNameGroup").style.display = isLogin ? "none" : "flex";
+  document.getElementById("authSubmitBtn").querySelector("span").textContent = isLogin ? "Sign In to Executive Console" : "Create Account & Get Started";
+  hideAlert("authAlert");
+}
+
+function showAlert(elementId, text, isError = true) {
+  const el = document.getElementById(elementId);
+  el.className = `alert-banner ${isError ? 'alert-error' : 'alert-success'}`;
+  el.textContent = text;
+  el.style.display = "block";
+}
+function hideAlert(elementId) {
+  const el = document.getElementById(elementId);
+  el.style.display = "none";
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const fullName = document.getElementById("authFullName").value.trim();
+  const submitBtn = document.getElementById("authSubmitBtn");
+
+  hideAlert("authAlert");
+  submitBtn.disabled = true;
+
+  const endpoint = currentAuthTab === "login" ? "/api/auth/login" : "/api/auth/register";
+  const payload = { email, password };
+  if (currentAuthTab === "register" && fullName) payload.full_name = fullName;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert("authAlert", data.detail || "Authentication failed. Please check credentials.");
+      submitBtn.disabled = false;
+      return;
+    }
+    authToken = data.access_token;
+    localStorage.setItem("omnivox_token", authToken);
+    currentUser = data.user;
+    showLoggedInView();
+    loadIntegrations();
+  } catch (err) {
+    showAlert("authAlert", "Network or server connection error: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+// Integrations Modal & Tab Switching
+let activeIntegTab = "gmail";
+function openIntegrationsModal(tab = "gmail") {
+  document.getElementById("integrationsModal").style.display = "flex";
+  hideAlert("integAlert");
+  switchIntegTab(tab);
+  loadIntegrations();
+}
+function closeIntegrationsModal() {
+  document.getElementById("integrationsModal").style.display = "none";
+}
+
+function switchIntegTab(tab) {
+  activeIntegTab = tab;
+  const isGmail = tab === "gmail";
+  document.getElementById("tabIntegGmail").classList.toggle("active", isGmail);
+  document.getElementById("tabIntegNotion").classList.toggle("active", !isGmail);
+  document.getElementById("integGmailPanel").style.display = isGmail ? "flex" : "none";
+  document.getElementById("integNotionPanel").style.display = isGmail ? "none" : "flex";
+  hideAlert("integAlert");
+}
+
+async function loadIntegrations() {
+  if (!authToken) return;
+  try {
+    const res = await fetch("/api/integrations", { headers: getAuthHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    // Gmail state
+    const navGmail = document.getElementById("navGmailPill");
+    const modalGmail = document.getElementById("modalGmailPill");
+    const gmailDisc = document.getElementById("gmailDiscBtn");
+    if (data.gmail && data.gmail.connected) {
+      navGmail.className = "status-pill connected";
+      navGmail.textContent = `📧 Gmail: ${data.gmail.account}`;
+      modalGmail.className = "status-pill connected";
+      modalGmail.textContent = `Connected (${data.gmail.account})`;
+      gmailDisc.style.display = "inline-block";
+    } else {
+      navGmail.className = "status-pill disconnected";
+      navGmail.textContent = "📧 Gmail: Off";
+      modalGmail.className = "status-pill disconnected";
+      modalGmail.textContent = "Not Connected";
+      gmailDisc.style.display = "none";
+    }
+
+    // Notion state
+    const navNotion = document.getElementById("navNotionPill");
+    const modalNotion = document.getElementById("modalNotionPill");
+    const notionDisc = document.getElementById("notionDiscBtn");
+    if (data.notion && data.notion.connected) {
+      navNotion.className = "status-pill connected";
+      navNotion.textContent = `📝 Notion: ${data.notion.account}`;
+      modalNotion.className = "status-pill connected";
+      modalNotion.textContent = `Connected (${data.notion.account})`;
+      notionDisc.style.display = "inline-block";
+    } else {
+      navNotion.className = "status-pill disconnected";
+      navNotion.textContent = "📝 Notion: Off";
+      modalNotion.className = "status-pill disconnected";
+      modalNotion.textContent = "Not Connected";
+      notionDisc.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Failed to load integrations:", err);
+  }
+}
+
+async function startGoogleOAuth() {
+  hideAlert("integAlert");
+  try {
+    const res = await fetch("/api/integrations/gmail/auth-url", { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert("integAlert", data.detail || "Google OAuth is not configured on the server. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.");
+      return;
+    }
+    if (data.auth_url) {
+      window.location.href = data.auth_url;
+    }
+  } catch (err) {
+    showAlert("integAlert", "Could not start Google OAuth: " + err.message);
+  }
+}
+
+async function saveNotionIntegration() {
+
+  const token = document.getElementById("notionTokenInput").value.trim();
+  const workspaceName = document.getElementById("notionWorkspaceInput").value.trim();
+  const btn = document.getElementById("notionSaveBtn");
+
+  if (!token) {
+    showAlert("integAlert", "Please provide your Notion Internal Integration Secret Token.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Validating with Notion API...";
+  hideAlert("integAlert");
+
+  try {
+    const res = await fetch("/api/integrations/notion", {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ token, workspace_name: workspaceName || undefined })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert("integAlert", data.detail || "Notion verification failed. Check that token is correct.");
+    } else {
+      showAlert("integAlert", data.message || "Notion verified and connected successfully!", false);
+      document.getElementById("notionTokenInput").value = "";
+      loadIntegrations();
+    }
+  } catch (err) {
+    showAlert("integAlert", "Connection error: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Verify & Connect Notion";
+  }
+}
+
+async function disconnectService(provider) {
+  if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
+  try {
+    const res = await fetch(`/api/integrations/${provider}`, {
+      method: "DELETE",
+      headers: getAuthHeaders()
+    });
+    if (res.ok) {
+      showAlert("integAlert", `${provider.toUpperCase()} disconnected successfully.`, false);
+      loadIntegrations();
+    }
+  } catch (err) {
+    showAlert("integAlert", "Error disconnecting: " + err.message);
+  }
+}
+
+// Chat & Voice Logic
 function formatStructuredText(text) {
   if (!text) return "";
-  // Escape HTML characters
   let escaped = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Format bold **text**
   escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #38bdf8; font-weight: 600;">$1</strong>');
-  // Format italic *text*
   escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  // Format bullet lines starting with - or *
   escaped = escaped.replace(/^[\*\-•]\s+(.+)$/gm, '<div style="margin-left: 12px; margin-bottom: 4px;">• $1</div>');
-  // Format line breaks
   escaped = escaped.replace(/\n/g, '<br/>');
   return escaped;
 }
@@ -334,7 +1089,7 @@ function addMessage(who, text) {
 
   const author = document.createElement("div");
   author.className = "msg-author";
-  author.textContent = who === "you" ? "You (User)" : "OmniVox (Agent)";
+  author.textContent = who === "you" ? "You (User)" : "OmniVox (Executive)";
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
@@ -352,26 +1107,28 @@ function playServerAudio(base64Data) {
     currentAudio.pause();
     currentAudio = null;
   }
-
   const audioSrc = "data:audio/mp3;base64," + base64Data;
   currentAudio = new Audio(audioSrc);
   audioIndicator.style.display = "inline-block";
 
-  currentAudio.onended = () => {
-    audioIndicator.style.display = "none";
-  };
-  currentAudio.onerror = (e) => {
-    console.error("Audio playback error:", e);
-    audioIndicator.style.display = "none";
-  };
-
-  currentAudio.play().catch(err => {
-    console.warn("Autoplay was prevented:", err);
-    audioIndicator.style.display = "none";
-  });
+  currentAudio.onended = () => { audioIndicator.style.display = "none"; };
+  currentAudio.onerror = () => { audioIndicator.style.display = "none"; };
+  currentAudio.play().catch(() => { audioIndicator.style.display = "none"; });
 }
 
-// 1. Text Submission (/api/chat)
+function setStatus(text, pulsing = false) {
+  if (pulsing) {
+    statusEl.innerHTML = `<span class="status-pulse"></span> ${text}`;
+  } else {
+    statusEl.textContent = text;
+  }
+}
+
+function sendQuickPrompt(promptText) {
+  sendTextMessage(promptText);
+}
+
+// Text submission
 async function sendTextMessage(text) {
   if (!text) return;
   addMessage("you", text);
@@ -382,13 +1139,19 @@ async function sendTextMessage(text) {
   form.append("session_id", sessionId);
 
   try {
-    const res = await fetch("/api/chat", { method: "POST", body: form });
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: form
+    });
+    if (res.status === 401) {
+      handleLogout();
+      return;
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     addMessage("agent", data.reply);
-    if (data.audio_base64) {
-      playServerAudio(data.audio_base64);
-    }
+    if (data.audio_base64) playServerAudio(data.audio_base64);
     setStatus("Ready");
   } catch (err) {
     addMessage("agent", "Error: " + err.message);
@@ -405,7 +1168,7 @@ document.getElementById("textForm").addEventListener("submit", (e) => {
   sendTextMessage(text);
 });
 
-// 2. Microphone Recording & Server STT (/api/voice)
+// Microphone Voice Recording
 async function startRecording() {
   if (isRecording) return;
   if (currentAudio) {
@@ -417,26 +1180,19 @@ async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
 
-    // Check supported types
     let mimeType = "audio/webm";
     if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
       mimeType = "audio/webm;codecs=opus";
     } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
       mimeType = "audio/mp4";
-    } else if (MediaRecorder.isTypeSupported("audio/ogg")) {
-      mimeType = "audio/ogg";
     }
 
     mediaRecorder = new MediaRecorder(stream, { mimeType });
-
     mediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) {
-        audioChunks.push(e.data);
-      }
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
     };
 
     mediaRecorder.onstop = async () => {
-      // Stop all mic tracks
       stream.getTracks().forEach(t => t.stop());
       const audioBlob = new Blob(audioChunks, { type: mimeType });
       if (audioBlob.size > 0) {
@@ -449,10 +1205,9 @@ async function startRecording() {
     mediaRecorder.start();
     isRecording = true;
     recordBtn.classList.add("recording");
-    recordBtn.textContent = "🔴 Release / Stop Recording";
+    recordBtn.textContent = "🔴 Release to Send";
     setStatus("Listening to your voice...", true);
   } catch (err) {
-    console.error("Microphone access error:", err);
     setStatus("Microphone permission denied or unavailable");
   }
 }
@@ -475,75 +1230,64 @@ async function sendVoiceAudio(blob) {
   formData.append("session_id", sessionId);
 
   try {
-    const res = await fetch("/api/voice", { method: "POST", body: formData });
+    const res = await fetch("/api/voice", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: formData
+    });
+    if (res.status === 401) {
+      handleLogout();
+      return;
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    if (data.transcript) {
-      addMessage("you", data.transcript);
-    }
-    if (data.reply) {
-      addMessage("agent", data.reply);
-    }
-    if (data.audio_base64) {
-      playServerAudio(data.audio_base64);
-    }
+    if (data.transcript) addMessage("you", data.transcript);
+    if (data.reply) addMessage("agent", data.reply);
+    if (data.audio_base64) playServerAudio(data.audio_base64);
     setStatus("Ready");
   } catch (err) {
-    console.error("Voice processing error:", err);
-    addMessage("agent", "Error processing voice clip: " + err.message);
+    addMessage("agent", "Error: " + err.message);
     setStatus("Voice processing failed");
   }
 }
 
-// Interaction handling: Hold-to-Talk vs Click-to-Toggle
+// Voice control event listeners
 toggleModeCheckbox.addEventListener("change", () => {
   if (isRecording) stopRecording();
   recordBtn.textContent = toggleModeCheckbox.checked ? "🎤 Click to Talk" : "🎤 Hold to Talk";
 });
 
 recordBtn.addEventListener("mousedown", () => {
-  if (!toggleModeCheckbox.checked) {
-    startRecording();
-  }
+  if (!toggleModeCheckbox.checked) startRecording();
 });
-
 recordBtn.addEventListener("mouseup", () => {
-  if (!toggleModeCheckbox.checked) {
-    stopRecording();
-  }
+  if (!toggleModeCheckbox.checked) stopRecording();
 });
-
 recordBtn.addEventListener("mouseleave", () => {
-  if (!toggleModeCheckbox.checked && isRecording) {
-    stopRecording();
-  }
+  if (!toggleModeCheckbox.checked && isRecording) stopRecording();
 });
-
 recordBtn.addEventListener("touchstart", (e) => {
   if (!toggleModeCheckbox.checked) {
     e.preventDefault();
     startRecording();
   }
 });
-
 recordBtn.addEventListener("touchend", (e) => {
   if (!toggleModeCheckbox.checked) {
     e.preventDefault();
     stopRecording();
   }
 });
-
 recordBtn.addEventListener("click", () => {
   if (toggleModeCheckbox.checked) {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    if (isRecording) stopRecording();
+    else startRecording();
   }
 });
+
+// Run session initialization on page load
+initSession();
 </script>
 </body>
 </html>
-
