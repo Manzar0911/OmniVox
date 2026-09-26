@@ -15,9 +15,13 @@ were given explicitly confirms it should be sent (e.g. it says "send it",
 or the request is ambiguous about whether to send, write the draft and say
 it's ready to send pending confirmation - do not send it.
 
-Reply with a short, natural confirmation of what you found or did, not a
-dump of raw tool output.
+Formatting Guidelines:
+- Reply with a clean, concise, structured summary.
+- Avoid markdown asterisks (do not use **bold** or *italic* asterisks).
+- Clearly state the sender, subject, and concise message body in natural language.
+- Do not include raw email addresses in angle brackets (< >).
 """
+
 
 
 async def build_email_expert():

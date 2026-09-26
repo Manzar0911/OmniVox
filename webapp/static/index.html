@@ -309,6 +309,25 @@ function setStatus(text, pulsing = false) {
   }
 }
 
+function formatStructuredText(text) {
+  if (!text) return "";
+  // Escape HTML characters
+  let escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Format bold **text**
+  escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #38bdf8; font-weight: 600;">$1</strong>');
+  // Format italic *text*
+  escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Format bullet lines starting with - or *
+  escaped = escaped.replace(/^[\*\-•]\s+(.+)$/gm, '<div style="margin-left: 12px; margin-bottom: 4px;">• $1</div>');
+  // Format line breaks
+  escaped = escaped.replace(/\n/g, '<br/>');
+  return escaped;
+}
+
 function addMessage(who, text) {
   const row = document.createElement("div");
   row.className = "msg-row " + who;
@@ -319,7 +338,7 @@ function addMessage(who, text) {
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
-  bubble.textContent = text;
+  bubble.innerHTML = formatStructuredText(text);
 
   row.appendChild(author);
   row.appendChild(bubble);

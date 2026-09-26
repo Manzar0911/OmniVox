@@ -1,6 +1,7 @@
 """Open-source Text-to-Speech synthesis module for OmniVox."""
 import asyncio
 import os
+import re
 import tempfile
 import edge_tts
 
@@ -19,6 +20,27 @@ _RAW_VOICE = os.getenv("TTS_VOICE", "en-US-AriaNeural")
 _DEFAULT_VOICE = _VOICE_MAP.get(_RAW_VOICE.lower(), _RAW_VOICE)
 
 
+def clean_text_for_speech(text: str) -> str:
+    """Strip markdown formatting, asterisks, raw URLs, and symbols so speech sounds natural."""
+    if not text:
+        return ""
+    # Strip markdown links [label](url) -> label
+    text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text)
+    # Strip angle-bracketed emails/URLs <email@example.com> -> ""
+    text = re.sub(r'<[^>]+>', r'', text)
+    # Strip markdown bold / italics asterisks and underscores
+    text = re.sub(r'\*{1,3}([^*]+)\*{1,3}', r'\1', text)
+    text = re.sub(r'_{1,3}([^_]+)_{1,3}', r'\1', text)
+    # Strip header hashes (#), bullet asterisks (*), dashes (-), blockquotes (>) at start of line
+    text = re.sub(r'^[ \t]*[#*\-•>]+[ \t]*', '', text, flags=re.MULTILINE)
+    # Remove any leftover formatting symbols
+    text = text.replace('*', '').replace('#', '').replace('~', '').replace('`', '')
+    # Normalize whitespace and turn multiple linebreaks into sentence pauses
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n+', '. ', text)
+    return text.strip()
+
+
 async def _synthesize_edge_tts(text: str, output_path: str, voice: str) -> None:
     try:
         communicate = edge_tts.Communicate(text, voice)
@@ -31,7 +53,11 @@ async def _synthesize_edge_tts(text: str, output_path: str, voice: str) -> None:
 
 def synthesize_speech(text: str) -> str:
     """Convert text to spoken audio using neural TTS (zero cost)."""
-    log_stage("Orchestrator -> TTS", input=text)
+    spoken_text = clean_text_for_speech(text)
+    if not spoken_text:
+        return ""
+
+    log_stage("Orchestrator -> TTS", input=spoken_text)
     
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         tmp_path = tmp.name
@@ -46,9 +72,9 @@ def synthesize_speech(text: str) -> str:
         if loop.is_running():
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                pool.submit(lambda: asyncio.run(_synthesize_edge_tts(text, tmp_path, _DEFAULT_VOICE))).result()
+                pool.submit(lambda: asyncio.run(_synthesize_edge_tts(spoken_text, tmp_path, _DEFAULT_VOICE))).result()
         else:
-            loop.run_until_complete(_synthesize_edge_tts(text, tmp_path, _DEFAULT_VOICE))
+            loop.run_until_complete(_synthesize_edge_tts(spoken_text, tmp_path, _DEFAULT_VOICE))
 
         log_stage("TTS -> Speaker", output=f"<audio file: {tmp_path}>")
         return tmp_path
@@ -59,10 +85,11 @@ def synthesize_speech(text: str) -> str:
             import pyttsx3
             engine = pyttsx3.init()
             wav_path = tmp_path.replace(".mp3", ".wav")
-            engine.save_to_file(text, wav_path)
+            engine.save_to_file(spoken_text, wav_path)
             engine.runAndWait()
             return wav_path
         except Exception as e:
             print(f"[TTS] pyttsx3 fallback failed: {e}")
             return ""
+
 

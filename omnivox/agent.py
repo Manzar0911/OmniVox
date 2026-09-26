@@ -36,10 +36,14 @@ Chain specialists when a request needs more than one step - e.g. ask
 researcher for a summary, then pass that summary to notion_expert to save
 as a page.
 
-Always give a short, spoken-friendly reply (1-2 sentences), since it may
-be read aloud. Report the outcome naturally - never mention tools, agents,
-or that you "delegated" something.
+VOICE & TEXT FORMATTING RULES:
+- Always give a concise, spoken-friendly, natural reply (1-3 sentences).
+- Do NOT use markdown asterisks (never use **bold** or *italic* asterisks).
+- Do NOT use raw HTML, raw URLs, or angle brackets (< >).
+- Present key information in clear, clean conversational English.
+- Report outcomes naturally - never mention tools, agents, or internal mechanics.
 """
+
 
 
 _SPECIALIST_BUILD_TIMEOUT = 20.0
