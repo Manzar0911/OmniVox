@@ -413,8 +413,8 @@ async def disconnect_integration(
     return {"status": "success", "message": f"{clean_provider.capitalize()} disconnected."}
 
 
-from langchain_core.runnables import RunnableConfig
-from langchain_core.tracers import LangChainTracer
+from omnivox.cache import query_cache
+from omnivox.guardrails import GuardrailStatus, guardrails_manager
 
 
 async def _run_agent_turn(
@@ -424,9 +424,28 @@ async def _run_agent_turn(
     db: AsyncSession
 ) -> str:
     log_stage("User -> Orchestrator", input=transcript)
+
+    # 1. Input Guardrails (Prompt injection, jailbreaks, PII redaction, harmful content)
+    guard_res = guardrails_manager.validate_input(transcript)
+    if not guard_res.is_safe:
+        refusal_msg = f"I cannot process this request. {guard_res.reason or 'Security policy violation detected.'}"
+        log_stage("Guardrails -> User (BLOCKED)", reason=guard_res.reason)
+        return refusal_msg
+
+    sanitized_transcript = guard_res.sanitized_text
+
     user_session_key = f"user_{user.id}_{session_id}"
     messages = _sessions.setdefault(user_session_key, [])
-    messages.append(HumanMessage(content=transcript))
+
+    # 2. Conversational Intent Cache Check (for standalone repeat questions without pending history)
+    if len(messages) == 0:
+        cached_reply = query_cache.get(sanitized_transcript, user_id=user.id)
+        if cached_reply:
+            log_stage("QueryCache -> User (HIT)", query=sanitized_transcript)
+            messages.append(HumanMessage(content=sanitized_transcript))
+            return cached_reply
+
+    messages.append(HumanMessage(content=sanitized_transcript))
 
     # Build agent scoped dynamically with user's verified Gmail & Notion credentials
     agent_executor = await build_user_agent(db=db, user_id=user.id)
@@ -437,12 +456,13 @@ async def _run_agent_turn(
 
     run_config = RunnableConfig(
         run_name=f"OmniVox Turn ({user.email})",
-        tags=["omnivox", "voice_assistant", "production"],
+        tags=["omnivox", "voice_assistant", "production", "guardrails_enabled"],
         metadata={
             "user_id": user.id,
             "user_email": user.email,
             "session_id": session_id,
             "conversation_id": user_session_key,
+            "guardrail_applied": guard_res.applied_rules,
         },
         callbacks=callbacks if callbacks else None,
     )
@@ -450,9 +470,18 @@ async def _run_agent_turn(
     result = await agent_executor.ainvoke({"messages": messages}, config=run_config)
     messages = result["messages"][-_MAX_HISTORY_MESSAGES:]
     _sessions[user_session_key] = messages
-    reply = messages[-1].content
-    log_stage("Orchestrator -> User", output=reply)
-    return reply
+    raw_reply = messages[-1].content
+
+    # 3. Output Guardrails (Secret leakage prevention, voice formatting, hallucination check)
+    out_guard_res = guardrails_manager.validate_output(raw_reply)
+    safe_reply = out_guard_res.sanitized_text
+
+    # Store in query cache if safe
+    if out_guard_res.is_safe and len(messages) <= 2:
+        query_cache.set(sanitized_transcript, safe_reply, user_id=user.id)
+
+    log_stage("Orchestrator -> User", output=safe_reply)
+    return safe_reply
 
 
 @app.post("/api/chat")

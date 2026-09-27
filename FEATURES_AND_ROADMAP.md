@@ -46,7 +46,9 @@ Expand the specialist network by adding dedicated MCP servers and tools to handl
 | **Slack & Discord Specialist (`chat_expert`)** | Check unread channel summaries, search team discussions, and send formatted messages or voice transcripts. | Slack MCP Server / Discord API | Low-Medium |
 | **GitHub / GitLab Specialist (`devops_expert`)** | Review open pull requests, check CI/CD pipeline statuses, triage issues, and trigger releases. | GitHub MCP Server | Medium |
 | **Local File & Document Search (`files_expert`)** | Query and extract insights from local PDFs, Word documents, CSVs, and notes using local embeddings. | Local Filesystem MCP / ChromaDB | Medium |
-| **Real-Time Live Web Search** | Upgrade the `researcher` agent from static internal LLM generation to live DuckDuckGo/Tavily/Playwright real-time web scraping and fact-checking. | `duckduckgo-search` / `tavily-python` | Low |
+| **Real-Time Live Web Search** | Upgraded `researcher` agent to live Tavily Search API with DuckDuckGo fallback and search caching. | `tavily-python` / `duckduckgo-search` | Completed |
+| **Enterprise AI Guardrails** | Multi-layer input prompt injection defense, PII masking, harmful intent filtering, and output secret leakage protection. | `omnivox.guardrails` | Completed |
+| **Multi-Tier Latency Caching** | High-performance in-memory TTL & LRU caching for Search queries, Neural TTS audio waveforms, and Conversational intents. | `omnivox.cache` | Completed |
 | **WhatsApp / Telegram Specialist (`messenger_expert`)** | Send instant text/voice alerts or reminders to personal/team messaging channels. | WhatsApp Business API / Telegram Bot API | Medium |
 | **Finance & Market Data Tool (`finance_expert`)** | Query stock prices, crypto markets, currency exchange rates, and financial reports. | Yahoo Finance / AlphaVantage MCP | Low |
 

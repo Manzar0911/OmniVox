@@ -57,8 +57,16 @@ def synthesize_speech(text: str) -> str:
     if not spoken_text:
         return ""
 
-    log_stage("Orchestrator -> TTS", input=spoken_text)
-    
+    from .cache import audio_cache
+
+    # 1. Check audio cache (sub-millisecond instant hit)
+    cached_audio = audio_cache.get_audio_file(spoken_text, _DEFAULT_VOICE)
+    if cached_audio:
+        log_stage("AudioCache -> Speaker (HIT)", voice=_DEFAULT_VOICE)
+        return cached_audio
+
+    log_stage("Orchestrator -> TTS (MISS)", input=spoken_text)
+
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         tmp_path = tmp.name
 
@@ -76,8 +84,9 @@ def synthesize_speech(text: str) -> str:
         else:
             loop.run_until_complete(_synthesize_edge_tts(spoken_text, tmp_path, _DEFAULT_VOICE))
 
-        log_stage("TTS -> Speaker", output=f"<audio file: {tmp_path}>")
-        return tmp_path
+        cached_path = audio_cache.set_audio_file(spoken_text, _DEFAULT_VOICE, tmp_path)
+        log_stage("TTS -> Speaker", output=f"<audio file: {cached_path}>")
+        return cached_path
     except Exception as exc:
         print(f"[TTS] edge-tts error: {exc}")
         # Offline Windows pyttsx3 fallback
@@ -87,7 +96,8 @@ def synthesize_speech(text: str) -> str:
             wav_path = tmp_path.replace(".mp3", ".wav")
             engine.save_to_file(spoken_text, wav_path)
             engine.runAndWait()
-            return wav_path
+            cached_path = audio_cache.set_audio_file(spoken_text, _DEFAULT_VOICE, wav_path)
+            return cached_path
         except Exception as e:
             print(f"[TTS] pyttsx3 fallback failed: {e}")
             return ""

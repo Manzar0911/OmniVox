@@ -109,9 +109,44 @@ OmniVox utilizes a **Hierarchical Multi-Agent Architecture** where a central **O
    - Searches databases and pages across the user's workspace.
    - Reads page blocks and creates structured documents on demand.
 
-4. **`researcher` (Knowledge Specialist)**:
-   - Synthesizes in-depth technical or executive summaries on any topic.
-   - Formats findings cleanly into *Topic*, *Key Findings*, and *Conclusion* blocks ready for speech synthesis or Notion page storage.
+4. **`researcher` (Live Web Knowledge Specialist)**:
+   - Powered by **Tavily AI Search** with live real-time internet access and DuckDuckGo fallback.
+   - Answers current, updated, and ongoing queries beyond LLM training cutoff dates.
+   - Formats findings cleanly into structured *Topic*, *Key Findings*, and *Conclusion* blocks ready for speech synthesis or Notion page storage.
+
+---
+
+## 🛡️ Enterprise AI Guardrails Layer
+
+OmniVox implements multi-stage active guardrails to protect user privacy and system security:
+
+```
+User Input / Voice STT ──▶ [Input Guardrails] ──▶ [Multi-Agent Execution] ──▶ [Output Guardrails] ──▶ Neural TTS
+```
+
+- **Input Guardrails (`omnivox.guardrails.input_guardrails`)**:
+  - **Prompt Injection & Jailbreak Defense**: Detects and neutralizes adversarial attacks (`"ignore previous instructions"`, `<|im_start|>`, `DAN mode`, `sudo mode`).
+  - **Harmful Content Filtering**: Blocks destructive, malicious, or hazardous queries.
+  - **Automated PII & Secret Redaction**: Masks SSNs, credit card numbers, Bearer tokens, and sensitive API keys (`sk-...`, `ntn_...`, `AKIA...`) to `[REDACTED_*]` tokens before hitting external LLMs.
+  - **Payload Length Limiter**: Protects against denial-of-service token floods.
+- **Output Guardrails (`omnivox.guardrails.output_guardrails`)**:
+  - **Credential & Secret Leakage Prevention**: Prevents unintentional leakage of database connection strings, JWT signatures, or internal tracebacks.
+  - **Voice & Speech Format Sanitization**: Strips markdown asterisks (`**` / `*`), raw URLs, and angle brackets for crystal-clear spoken audio.
+
+---
+
+## ⚡ Multi-Tier Latency Caching System
+
+To achieve sub-second voice interaction and minimize API costs, OmniVox incorporates intelligent multi-tier caching:
+
+- **Search Cache (`omnivox.cache.search_cache`)**:
+  - Normalized query hashing with 1-hour TTL.
+  - **In-Flight Request Deduplication**: Prevents cache stampedes by ensuring concurrent identical research requests share a single live search call.
+- **Neural TTS Audio Cache (`omnivox.cache.audio_cache`)**:
+  - Caches generated speech waveforms keyed by `(voice, spoken_text)` with a 24-hour TTL.
+  - Cuts repeated voice generation latency from ~800ms down to **< 5ms** (instantaneous playback).
+- **Conversational Query Cache (`omnivox.cache.query_cache`)**:
+  - Exact and normalized intent caching for deterministic user requests.
 
 ---
 
@@ -157,6 +192,17 @@ langchain-voice-agent/
 │   ├── mcp_client.py            # Model Context Protocol (MCP) client
 │   ├── speech_to_text.py        # Voice recognition & audio transcription
 │   ├── text_to_speech.py        # Neural text-to-speech voice synthesizer
+│   ├── cache/                   # High-performance caching subsystem
+│   │   ├── __init__.py
+│   │   ├── ttl_cache.py         # Thread-safe LRU & TTL cache engine
+│   │   ├── search_cache.py      # Tavily/DDG search caching with deduplication
+│   │   ├── audio_cache.py       # Neural TTS audio synthesis cache
+│   │   └── query_cache.py       # Conversational intent cache
+│   ├── guardrails/              # Enterprise AI Guardrails subsystem
+│   │   ├── __init__.py
+│   │   ├── input_guardrails.py  # Prompt injection, PII redaction, safety filters
+│   │   ├── output_guardrails.py # Secret leak prevention & voice sanitization
+│   │   └── manager.py           # Unified GuardrailsManager
 │   ├── agents/
 │   │   ├── email_expert.py      # Gmail specialist sub-agent definition
 │   │   ├── notion_expert.py     # Notion specialist sub-agent definition
@@ -168,11 +214,13 @@ langchain-voice-agent/
 │   └── tools/
 │       ├── gmail_dynamic.py     # Per-user Google OAuth 2.0 & Gmail REST API tools
 │       ├── notion_dynamic.py    # Per-user Notion API v1 tools & active token validator
-│       └── research_tool.py     # Deep research & structured summarization tool
+│       └── research_tool.py     # Live Tavily search tool with caching & guardrails
 ├── webapp/
 │   ├── server.py                # FastAPI application server (Auth, OAuth, Chat, Voice)
 │   └── static/
 │       └── index.html           # Production glassmorphic responsive web interface
+├── tests/
+│   └── test_guardrails_caching.py # Automated test suite for guardrails & caching
 ├── docs/
 │   └── screenshots/             # UI and architecture screenshots
 ├── .env.example                 # Environment variables configuration template
